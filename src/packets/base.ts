@@ -16,12 +16,12 @@ export class BasePacket<II, OI> extends AbstractPacket {
     return (new this()).fromOptions(obj);
   }
 
-  fromRaw(buf: Buffer) {
+  protected fromRaw(buf: Buffer) {
     super.fromRaw(buf);
     return this;
   }
 
-  fromOptions(opts: II) {
+  protected fromOptions(opts: II) {
     super.fromOptions(opts);
     return this;
   }

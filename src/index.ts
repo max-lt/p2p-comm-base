@@ -24,8 +24,11 @@ export interface Module {
 
 }
 
+import { BasePacket, OBasePacket, IBasePacket } from './packets/base';
+export { BasePacket, OBasePacket, IBasePacket };
+
 import * as util from './packets/util';
 export { util };
 
-import { AbstractPacket, OAbstractPacket, IAbstractPacket } from './packets/abstract';
-export { AbstractPacket, OAbstractPacket, IAbstractPacket };
+import { OMeta as MetaInterface } from './packets/util';
+export { MetaInterface };
