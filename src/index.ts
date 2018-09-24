@@ -4,9 +4,13 @@ export interface PacketTypesI { }
 
 export interface NodeModule { }
 
-export interface PoolModule { }
+export interface PoolModule {
+  handlePacket(packet);
+}
 
-export interface PeerModule { }
+export interface PeerModule {
+  handlePacket(packet);
+}
 
 export interface Module {
 

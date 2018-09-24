@@ -1,41 +1,10 @@
 import * as assert from 'assert';
 
-import { AbstractPacket } from '../../src/packets/abstract';
+import { BasePacket } from '../../src/packets/base';
 
-class MetaPacket extends AbstractPacket {
-
-  static fromRaw(data: Buffer) {
-    return (new this()).fromRaw(data);
-  }
-
-  static fromObject(obj: Object) {
-    return (new this()).fromOptions(obj);
-  }
-
-  fromRaw(buf: Buffer) {
-    super.fromRaw(buf);
-    this.type = 0;
-    return this;
-  }
-
-  fromOptions(opts) {
-    super.fromOptions(opts);
-    this.type = 0;
-    return this;
-  }
-
-  toRaw(): Buffer {
-    return this.encodeRawMeta();
-  }
-
-  toJSON() {
-    return this.getMeta();
-  }
-
-  getSize(): number {
-    return 0;
-  }
-
+class MetaPacket extends BasePacket<{}, {}> {
+  static type = 0;
+  type = 0;
 }
 
 describe('packets.meta tests', () => {
@@ -49,4 +18,5 @@ describe('packets.meta tests', () => {
   it('should be able to return it\'s raw size', () => {
     assert.equal(packet.toRaw().length, packet.getTotalSize());
   });
+
 });
