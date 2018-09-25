@@ -27,3 +27,6 @@ export { BufferParser };
 
 import { AbstractTransport, AbstractServer } from './transport';
 export { AbstractTransport, AbstractServer };
+
+import { mergeModules } from './merge';
+export { mergeModules };

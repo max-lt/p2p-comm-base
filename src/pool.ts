@@ -20,7 +20,7 @@ export interface Pool extends EventEmitter {
 
   listen(port?: number);
 
-  broadcast(data: Buffer | AbstractPacket);
+  broadcast(data: AbstractPacket);
 
   on(event: 'peer', listener: (peer: Peer) => void): this;
   on(event: 'data', listener: (data: Buffer) => void): this;
@@ -163,11 +163,7 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
     this.server.listen(port);
   }
 
-  broadcast(packet: AbstractPacket | Buffer) {
-    if (Buffer.isBuffer(packet)) {
-      return this.peers.broadcast(packet);
-    }
-
+  broadcast(packet: AbstractPacket) {
     this.logger.debug('m >>', packet.getTypeName(), packet.packetId, this.filter.has(packet.packetId));
     this.filter.add(packet.packetId);
     this.peers.broadcast(packet.toRaw());
