@@ -1,16 +1,16 @@
 import * as crypto from 'crypto';
-import { OMeta, metaLength, decodeRawMeta, metaLengths } from './util';
+import { PacketMetaI, metaLength, decodeRawMeta, metaLengths } from './util';
 // import { types } from './types';
 
 // const typesNames = Object.entries(types).reduce((acc, [k, v]) => (acc[v] = k, acc), {});
 
 // tslint:disable-next-line:no-empty-interface
-export interface IAbstractPacket { }
-export interface OAbstractPacket {
+export interface IAbstractPacketI { }
+export interface OAbstractPacketI {
   packetId: string;
   date: Date;
 }
-export abstract class AbstractPacket implements OAbstractPacket {
+export abstract class AbstractPacket implements OAbstractPacketI {
 
   static type = -1;
   type = -1;
@@ -30,7 +30,7 @@ export abstract class AbstractPacket implements OAbstractPacket {
 
   abstract toJSON(): Object;
 
-  protected fromOptions(opts: IAbstractPacket) {
+  protected fromOptions(opts: IAbstractPacketI) {
     this.packetId = crypto.randomBytes(8).toString('hex');
     this.date = new Date();
   }
@@ -51,11 +51,11 @@ export abstract class AbstractPacket implements OAbstractPacket {
     return meta;
   }
 
-  protected decodeRawMeta(buf: Buffer): OMeta {
+  protected decodeRawMeta(buf: Buffer): PacketMetaI {
     return decodeRawMeta(buf);
   }
 
-  protected getMeta(): OMeta {
+  protected getMeta(): PacketMetaI {
     return {
       packetId: this.packetId,
       date: this.date,
@@ -87,7 +87,7 @@ export abstract class EmptyPacket extends AbstractPacket {
     return this;
   }
 
-  toJSON(): OMeta {
+  toJSON(): PacketMetaI {
     return Object.assign(this.getMeta(), { type: this.type });
   }
 

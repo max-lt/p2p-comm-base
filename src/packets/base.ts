@@ -1,12 +1,12 @@
-import { AbstractPacket, OAbstractPacket, IAbstractPacket } from './abstract';
-import { OMeta } from './util';
+import { AbstractPacket, OAbstractPacketI, IAbstractPacketI } from './abstract';
+import { PacketMetaI } from './util';
 
 // tslint:disable-next-line:no-empty-interface
-export interface IBasePacket extends IAbstractPacket { }
+export interface IBasePacketI extends IAbstractPacketI { }
 // tslint:disable-next-line:no-empty-interface
-export interface OBasePacket extends OAbstractPacket { }
+export interface OBasePacketI extends OAbstractPacketI { }
 
-export class BasePacket<II, OI> extends AbstractPacket {
+export class BasePacket<II = {}, OI = {}> extends AbstractPacket {
 
   static fromRaw(data: Buffer) {
     return (new this()).fromRaw(data);
@@ -30,7 +30,7 @@ export class BasePacket<II, OI> extends AbstractPacket {
     return this.encodeRawMeta();
   }
 
-  toJSON(): OI & OMeta {
+  toJSON(): OI & PacketMetaI {
     return Object.assign(this.getMeta());
   }
 

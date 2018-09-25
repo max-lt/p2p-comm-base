@@ -7,7 +7,7 @@ export const metaLengths = {
 
 export const metaLength = metaLengths.TYPE + metaLengths.LEN + metaLengths.DATE + metaLengths.PACKET_ID;
 
-export function decodeRawMeta(buf: Buffer): OMeta {
+export function decodeRawMeta(buf: Buffer): PacketMetaI {
   const type = buf.readUInt8(0);
   const size = buf.readUInt32BE(metaLengths.TYPE);
   const date = new Date(buf.readDoubleBE(metaLengths.TYPE + metaLengths.LEN));
@@ -33,7 +33,7 @@ export function writeUInt32(n: number): Buffer {
   return dest;
 }
 
-export interface OMeta {
+export interface PacketMetaI {
   packetId: string;
   date: Date;
   type: number;
