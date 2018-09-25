@@ -27,18 +27,16 @@ export interface Peer extends EventEmitter {
   filter: Set<string>;
 
   on(event: 'connect', listener: () => void): this;
-  on(event: 'handshake', listener: (outbound: boolean) => void): this;
-  on(event: 'packet', listener: (data: AbstractPacket) => void): this;
   on(event: 'close', listener: (had_error: boolean) => void): this;
   on(event: 'error', listener: (err: Error) => void): void;
   on(event: 'destroy', listener: () => void): void;
+  on(event: string | symbol, listener: (...args: any[]) => void): this;
 
   once(event: 'connect', listener: () => void): this;
-  once(event: 'handshake', listener: (outbound: boolean) => void): this;
-  once(event: 'packet', listener: (data: AbstractPacket) => void): this;
   once(event: 'close', listener: (had_error: boolean) => void): this;
   once(event: 'error', listener: (err: Error) => void): void;
   once(event: 'destroy', listener: () => void): void;
+  once(event: string | symbol, listener: (...args: any[]) => void): this;
 
   destroy();
 
@@ -151,7 +149,7 @@ export class BasePeer/* <T extends AbstractTransport> */ extends EventEmitter im
 
     this.parser.on('packet', (packet) => {
       try {
-        this.moduleHandler.handlePacket(packet, null);
+        this.moduleHandler.handlePacket(packet);
       } catch (e) {
         this.error(e);
         this.destroy();

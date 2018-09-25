@@ -17,15 +17,9 @@ export function mergeModules(modules: Module[]): Module {
       return this;
     }
 
-    handlePacket(packet, next) {
+    bindPeer(peer) {
       for (const mod of this.modules) {
-        mod.handlePacket(packet, next);
-      }
-    }
-
-    bindPeer(peer, next) {
-      for (const mod of this.modules) {
-        mod.handlePacket(peer, next);
+        mod.bindPeer(peer);
       }
     }
   }
@@ -43,10 +37,15 @@ export function mergeModules(modules: Module[]): Module {
       return this;
     }
 
-    handlePacket(packet, next) {
+    handlePacket(packet): boolean {
+      let handled = false;
       for (const mod of this.modules) {
-        mod.handlePacket(packet, next);
+        handled = mod.handlePacket(packet);
+        if (handled) {
+          return true;
+        }
       }
+      return false;
     }
   }
 

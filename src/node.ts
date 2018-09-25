@@ -6,6 +6,7 @@ import { EventEmitter } from 'events';
 import { AbstractTransport } from './transport';
 
 import { Peer } from './peer';
+import { AbstractPacket } from './packets/abstract';
 
 export interface Node {
 
@@ -41,13 +42,12 @@ export abstract class BaseNode<T extends AbstractTransport> extends EventEmitter
   init() {
     assert(this.pool);
     this.pool.on('listening', (data) => this.emit('listening', data));
-    this.pool.on('data', (data) => this.emit('data', data));
     this.pool.on('peer', (peer) => this.emit('peer', peer));
     this.pool.on('error', (err) => this.emit('error', err));
   }
 
-  send(data: Buffer) {
-    this.pool.broadcast(data);
+  send(packet: AbstractPacket) {
+    this.pool.broadcast(packet);
   }
 
   listen(port?: number) {

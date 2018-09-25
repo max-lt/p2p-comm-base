@@ -23,16 +23,16 @@ export interface Pool extends EventEmitter {
   broadcast(data: AbstractPacket);
 
   on(event: 'peer', listener: (peer: Peer) => void): this;
-  on(event: 'data', listener: (data: Buffer) => void): this;
   on(event: 'error', listener: (err: Error) => void): this;
   on(event: 'connection', listener: (transport: AbstractTransport) => void): this;
   on(event: 'listening', listener: (data: any) => void): this;
+  on(event: string | symbol, listener: (...args: any[]) => void): this;
 
   once(event: 'peer', listener: (peer: Peer) => void): this;
-  once(event: 'data', listener: (data: Buffer) => void): this;
   once(event: 'error', listener: (err: Error) => void): this;
   once(event: 'connection', listener: (transport: AbstractTransport) => void): this;
   once(event: 'listening', listener: (data: any) => void): this;
+  once(event: string | symbol, listener: (...args: any[]) => void): this;
 
 }
 
@@ -152,10 +152,6 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
       this.logger.debug(`Peer close, was ${connected ? 'connected' : 'disconnected'}`);
       this.peers.delete(peer);
       this.logger.log(`${this.peers.size} peers connected.`);
-    });
-
-    peer.on('packet', (packet) => {
-      this.moduleHandler.handlePacket(packet, null);
     });
   }
 

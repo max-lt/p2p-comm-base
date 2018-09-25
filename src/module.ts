@@ -7,18 +7,17 @@ import { Peer } from './peer';
 export declare class PeerPacketHandler {
   constructor(peer: Peer);
   static create(peer: Peer): PeerPacketHandler;
-  handlePacket(packet, next?): any;
+  handlePacket(packet): boolean;
 }
 
 export declare class PoolPacketHandler {
   constructor(pool: Pool);
   static create(pool: Pool): PoolPacketHandler;
-  handlePacket(packet, next?): any;
-  bindPeer(peer: Peer, next?);
+  bindPeer(peer: Peer);
 }
 
 export declare class NodePacketHandler {
-  handlePacket(parent, packet, next?): any;
+  handlePacket(packet): boolean;
 }
 
 export interface ModuleI {
