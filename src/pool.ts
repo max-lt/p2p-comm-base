@@ -52,7 +52,7 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
   port: number;
 
   seeds: number[];
-  filter: Set<string>;
+  ctx: object;
 
   maxInbound = 8;
   maxOutbound = 8;
@@ -70,17 +70,17 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
     super();
     this.port = 0;
     this.handshake = true;
-    this.filter = new Set();
     this.peers = new PeerSet;
     this.logger = new SimpleLogger('pool');
     this.server = Server.create();
     this.seeds = opts && opts.seed || [];
     this.nodeId = opts.nodeId;
 
-    this.moduleHandler = mod.Pool.create(this);
+    this.ctx = {};
+    this.moduleHandler = mod.Pool.create(this, this.ctx);
     this.createTransport = Transport.connect;
 
-    this.logger.info('Created pool');
+    this.logger.info('Created pool', this.ctx);
     this.initServer();
   }
 
@@ -107,7 +107,7 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
   }
 
   addInbound(transport: T) {
-    const opts = { filter: this.filter, handshake: this.handshake };
+    const opts = { ctx: this.ctx };
     const peer: Peer = BasePeer.fromInbound(opts, transport, this.mod);
     this.bindPeer(peer);
   }
@@ -123,7 +123,8 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
   }
 
   private async addOutbound(port: number) {
-    const opts = { port, filter: this.filter, handshake: this.handshake };
+    const ctx = this.ctx;
+    const opts = { port, ctx };
     let i = 4;
     while (i--) {
       await wait(1000);
@@ -160,8 +161,9 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
   }
 
   broadcast(packet: AbstractPacket) {
-    this.logger.debug('m >>', packet.getTypeName(), packet.packetId, this.filter.has(packet.packetId));
-    this.filter.add(packet.packetId);
+    // TODO:
+    // this.logger.debug('m >>', packet.getTypeName(), packet.packetId, this.filter.has(packet.packetId));
+    // this.filter.add(packet.packetId);
     this.peers.broadcast(packet.toRaw());
   }
 

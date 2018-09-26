@@ -8,12 +8,12 @@ export function mergeModules(modules: Module[]): Module {
 
     modules: PoolPacketHandler[];
 
-    static create(parent) {
-      return (new this()).create(parent);
+    static create(parent, ctx) {
+      return (new this()).create(parent, ctx);
     }
 
-    private create(parent) {
-      this.modules = modules.map((m) => m.Pool.create(parent));
+    private create(parent, ctx) {
+      this.modules = modules.map((m) => m.Pool.create(parent, ctx));
       return this;
     }
 
@@ -28,12 +28,12 @@ export function mergeModules(modules: Module[]): Module {
 
     modules: PeerPacketHandler[];
 
-    static create(parent) {
-      return (new this()).create(parent);
+    static create(parent, ctx) {
+      return (new this()).create(parent, ctx);
     }
 
-    private create(parent) {
-      this.modules = modules.map((m) => m.Peer.create(parent));
+    private create(parent, ctx) {
+      this.modules = modules.map((m) => m.Peer.create(parent, ctx));
       return this;
     }
 

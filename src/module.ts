@@ -5,14 +5,14 @@ import { Peer } from './peer';
 // tslint:disable:no-empty-interface
 
 export declare class PeerPacketHandler {
-  constructor(peer: Peer);
-  static create(peer: Peer): PeerPacketHandler;
+  constructor(peer: Peer, ctx?: object);
+  static create(peer: Peer, ctx?: object): PeerPacketHandler;
   handlePacket(packet): boolean;
 }
 
 export declare class PoolPacketHandler {
-  constructor(pool: Pool);
-  static create(pool: Pool): PoolPacketHandler;
+  constructor(pool: Pool, ctx?: object);
+  static create(pool: Pool, ctx?: object): PoolPacketHandler;
   bindPeer(peer: Peer);
 }
 

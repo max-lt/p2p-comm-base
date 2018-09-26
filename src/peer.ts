@@ -23,9 +23,6 @@ export interface Peer extends EventEmitter {
 
   logger: Logger;
 
-  // TODO: filter with it's own module ?
-  filter: Set<string>;
-
   on(event: 'connect', listener: () => void): this;
   on(event: 'close', listener: (had_error: boolean) => void): this;
   on(event: 'error', listener: (err: Error) => void): void;
@@ -50,7 +47,7 @@ export interface Peer extends EventEmitter {
 }
 
 
-export class BasePeer/* <T extends AbstractTransport> */ extends EventEmitter implements Peer {
+export class BasePeer extends EventEmitter implements Peer {
 
   // debug
   protected static counter = 0;
@@ -68,7 +65,7 @@ export class BasePeer/* <T extends AbstractTransport> */ extends EventEmitter im
   id: string;
   port: number;
   host: string;
-  filter: Set<string>;
+  ctx: any;
 
   connectTimeout: Timer;
 
@@ -77,21 +74,21 @@ export class BasePeer/* <T extends AbstractTransport> */ extends EventEmitter im
 
   moduleHandler: PeerPacketHandler;
 
-  constructor({ port, filter }, mod: Module) {
+  constructor({ port, ctx }, mod: Module) {
     super();
     this.port = port;
 
     this.connectTimeout = new Timer(5 * 1000);
 
+    this.ctx = ctx;
     this.logger = new SimpleLogger('peer:' + BasePeer.counter++);
-    this.filter = filter;
     this.parser = new BufferParser(mod.packets);
     this.init();
 
     // this.pingTimeout = new Timer(60 * 1000);
     // this.pongTimeout = new Timer(10 * 1000);
 
-    this.moduleHandler = mod.Peer.create(this);
+    this.moduleHandler = mod.Peer.create(this, this.ctx);
   }
 
   static fromInbound(options, transport, mod) {
@@ -113,7 +110,6 @@ export class BasePeer/* <T extends AbstractTransport> */ extends EventEmitter im
     this.connected = true;
     this.outbound = false;
     this.bind(transport);
-    // this.expectHandshake();
   }
 
   /**
@@ -203,7 +199,6 @@ export class BasePeer/* <T extends AbstractTransport> */ extends EventEmitter im
     }
 
     this.connectTimeout.clear();
-    // this.handshakeTimeout.clear();
 
     this.emit('close', this.connected);
 
@@ -222,8 +217,9 @@ export class BasePeer/* <T extends AbstractTransport> */ extends EventEmitter im
   }
 
   send(packet: AbstractPacket) {
-    assert(!this.filter.has(packet.packetId), 'Send should not be used to braodcast');
-    this.logger.debug('m ->', packet.getTypeName(), packet.packetId);
+    // TODO:
+    // assert(!this.ctx.filter.has(packet.packetId), 'Send should not be used to braodcast');
+    // this.logger.debug('m ->', packet.getTypeName(), packet.packetId);
     this.write(packet.toRaw());
   }
 }
