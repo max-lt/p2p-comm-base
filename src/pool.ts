@@ -3,7 +3,7 @@ import { BasePeer, Peer } from './peer';
 import { Logger, SimpleLogger } from './logger';
 import { AbstractServer, AbstractTransport } from './transport';
 import { wait } from './util/wait';
-import { Module } from '.';
+import { ModuleI } from '.';
 import { AbstractPacket } from './packets/abstract';
 import { PoolPacketHandler } from './module';
 
@@ -33,7 +33,6 @@ export interface Pool extends EventEmitter {
   once(event: 'connection', listener: (transport: AbstractTransport) => void): this;
   once(event: 'listening', listener: (data: any) => void): this;
   once(event: string | symbol, listener: (...args: any[]) => void): this;
-
 }
 
 export class BasePool<T extends AbstractTransport> extends EventEmitter implements Pool {
@@ -65,7 +64,7 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
     opts: { seed: number[], nodeId },
     Transport: typeof AbstractTransport,
     Server: typeof AbstractServer,
-    private mod: Module
+    private mod: ModuleI
   ) {
     super();
     this.port = 0;
@@ -80,7 +79,7 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
     this.moduleHandler = mod.Pool.create(this, this.ctx);
     this.createTransport = Transport.connect;
 
-    this.logger.info('Created pool', this.ctx);
+    this.logger.info('Created pool', opts.nodeId);
     this.initServer();
   }
 
@@ -107,8 +106,8 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
   }
 
   addInbound(transport: T) {
-    const opts = { ctx: this.ctx };
-    const peer: Peer = BasePeer.fromInbound(opts, transport, this.mod);
+    const opts = {};
+    const peer: Peer = BasePeer.fromInbound(opts, transport, this.mod, this.ctx);
     this.bindPeer(peer);
   }
 
@@ -123,12 +122,11 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
   }
 
   private async addOutbound(port: number) {
-    const ctx = this.ctx;
-    const opts = { port, ctx };
+    const opts = { port };
     let i = 4;
     while (i--) {
       await wait(1000);
-      const peer = BasePeer.fromOutbound(opts, this.mod);
+      const peer = BasePeer.fromOutbound(opts, this.mod, this.ctx);
       this.logger.log('Outbound peer', peer.port);
       this.bindPeer(peer);
       try {
@@ -161,9 +159,13 @@ export class BasePool<T extends AbstractTransport> extends EventEmitter implemen
   }
 
   broadcast(packet: AbstractPacket) {
-    // TODO:
-    // this.logger.debug('m >>', packet.getTypeName(), packet.packetId, this.filter.has(packet.packetId));
-    // this.filter.add(packet.packetId);
+    if (this.moduleHandler.beforeBroadcast) {
+      let handled = false;
+      handled = this.moduleHandler.beforeBroadcast(packet);
+      if (handled) {
+        return;
+      }
+    }
     this.peers.broadcast(packet.toRaw());
   }
 

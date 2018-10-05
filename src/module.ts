@@ -4,41 +4,50 @@ import { Peer } from './peer';
 
 // tslint:disable:no-empty-interface
 
-export declare class PeerPacketHandler {
-  constructor(peer: Peer, ctx?: object);
-  static create(peer: Peer, ctx?: object): PeerPacketHandler;
+export interface PeerPacketHandlerFactory {
+  create(peer: Peer, ctx: object): PeerPacketHandler;
+}
+
+export interface PeerPacketHandler {
   handlePacket(packet): boolean;
 }
 
-export declare class PoolPacketHandler {
-  constructor(pool: Pool, ctx?: object);
-  static create(pool: Pool, ctx?: object): PoolPacketHandler;
-  bindPeer(peer: Peer);
+export interface PoolPacketHandlerFactory {
+  create(pool: Pool, ctx: object): PoolPacketHandler;
 }
 
-export declare class NodePacketHandler {
+export interface PoolPacketHandler {
+  bindPeer(peer: Peer);
+  beforeBroadcast?(packet: AbstractPacket): boolean;
+}
+
+export interface NodePacketHandlerFactory {
+
+}
+
+export interface NodePacketHandler {
   handlePacket(packet): boolean;
 }
 
 export interface ModuleI {
-  Node: typeof NodePacketHandler;
-  Pool: typeof PoolPacketHandler;
-  Peer: typeof PeerPacketHandler;
+  Node: NodePacketHandlerFactory;
+  Pool: PoolPacketHandlerFactory;
+  Peer: PeerPacketHandlerFactory;
   packets: Array<(typeof AbstractPacket)>;
 }
 
 interface ModuleOptionsI {
-  Node?: typeof NodePacketHandler;
-  Pool?: typeof PoolPacketHandler;
-  Peer?: typeof PeerPacketHandler;
+  Node?: NodePacketHandlerFactory;
+  Pool?: PoolPacketHandlerFactory;
+  Peer?: PeerPacketHandlerFactory;
   packets?: Array<(typeof AbstractPacket)>;
 }
 
 export class Module implements ModuleI {
 
-  Node: typeof NodePacketHandler;
-  Pool: typeof PoolPacketHandler;
-  Peer: typeof PeerPacketHandler;
+  Node: NodePacketHandlerFactory;
+  Pool: PoolPacketHandlerFactory;
+  Peer: PeerPacketHandlerFactory;
   packets: Array<(typeof AbstractPacket)>;
 
   private constructor() { }

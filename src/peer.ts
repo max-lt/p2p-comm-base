@@ -7,9 +7,8 @@ import { Timer } from './util/timer';
 import { BufferParser } from './parser';
 import { AbstractTransport } from './transport';
 
-import { Module } from '.';
 import { AbstractPacket } from './packets/abstract';
-import { PeerPacketHandler } from './module';
+import { PeerPacketHandler, ModuleI } from './module';
 
 export interface Peer extends EventEmitter {
 
@@ -65,7 +64,6 @@ export class BasePeer extends EventEmitter implements Peer {
   id: string;
   port: number;
   host: string;
-  ctx: any;
 
   connectTimeout: Timer;
 
@@ -74,13 +72,12 @@ export class BasePeer extends EventEmitter implements Peer {
 
   moduleHandler: PeerPacketHandler;
 
-  constructor({ port, ctx }, mod: Module) {
+  constructor({ port }, mod: ModuleI, ctx) {
     super();
     this.port = port;
 
     this.connectTimeout = new Timer(5 * 1000);
 
-    this.ctx = ctx;
     this.logger = new SimpleLogger('peer:' + BasePeer.counter++);
     this.parser = new BufferParser(mod.packets);
     this.init();
@@ -88,17 +85,17 @@ export class BasePeer extends EventEmitter implements Peer {
     // this.pingTimeout = new Timer(60 * 1000);
     // this.pongTimeout = new Timer(10 * 1000);
 
-    this.moduleHandler = mod.Peer.create(this, this.ctx);
+    this.moduleHandler = mod.Peer.create(this, ctx);
   }
 
-  static fromInbound(options, transport, mod) {
-    const peer = new this(options, mod);
+  static fromInbound(options, transport, mod, ctx) {
+    const peer = new this(options, mod, ctx);
     peer.accept(transport);
     return peer;
   }
 
-  static fromOutbound(options, mod) {
-    const peer = new this(options, mod);
+  static fromOutbound(options, mod, ctx) {
+    const peer = new this(options, mod, ctx);
     peer.outbound = true;
     return peer;
   }

@@ -1,32 +1,25 @@
-import { AbstractPacket, OAbstractPacketI, IAbstractPacketI } from './packets/abstract';
-export { AbstractPacket, OAbstractPacketI, IAbstractPacketI };
+export { AbstractPacket, OAbstractPacketI, IAbstractPacketI } from './packets/abstract';
 
-import { BasePacket, OBasePacketI, IBasePacketI } from './packets/base';
-export { BasePacket, OBasePacketI, IBasePacketI };
+export { BasePacket, OBasePacketI, IBasePacketI } from './packets/base';
 
 import * as util from './packets/util';
 export { util };
 
-import { PacketMetaI } from './packets/util';
-export { PacketMetaI };
+export { PacketMetaI } from './packets/util';
 
-import { Module } from './module';
-export { Module };
+export { Module, ModuleI } from './module';
+export { NodePacketHandler, NodePacketHandlerFactory } from './module';
+export { PoolPacketHandler, PoolPacketHandlerFactory } from './module';
+export { PeerPacketHandler, PeerPacketHandlerFactory } from './module';
 
-import { Node, BaseNode } from './node';
-export { Node, BaseNode };
+export { Node, BaseNode } from './node';
 
-import { Pool, BasePool } from './pool';
-export { Pool, BasePool };
+export { Pool, BasePool } from './pool';
 
-import { Peer, BasePeer } from './peer';
-export { Peer, BasePeer };
+export { Peer, BasePeer } from './peer';
 
-import { BufferParser } from './parser';
-export { BufferParser };
+export { BufferParser } from './parser';
 
-import { AbstractTransport, AbstractServer } from './transport';
-export { AbstractTransport, AbstractServer };
+export { AbstractTransport, AbstractServer } from './transport';
 
-import { mergeModules } from './merge';
-export { mergeModules };
+export { CompoundModule } from './modules';
