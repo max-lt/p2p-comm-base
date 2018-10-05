@@ -22,7 +22,7 @@ export interface PoolPacketHandler {
 }
 
 export interface NodePacketHandlerFactory {
-
+  create(node: Node): NodePacketHandler;
 }
 
 export interface NodePacketHandler {

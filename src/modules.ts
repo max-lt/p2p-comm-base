@@ -18,17 +18,25 @@ declare interface IsolatedContext extends Object { }
 
 class NodePacketHandlerAggregate {
 
-  factories: Module[];
+  static factories: Module[] = [];
   modules: NodePacketHandler[];
   parent: Node;
 
   constructor() {
-    this.factories = [];
     this.modules = [];
   }
 
-  create(parent: Node) {
+  static create(parent: Node) {
+    return (new this).create(parent);
+  }
 
+  static addModule(mod: Module) {
+    if (!mod.Node) { return; }
+    logger.debug('Node:Registering handler', mod.Node['name']);
+    this.factories.push(mod);
+  }
+
+  create(parent: Node) {
     return this;
   }
 
@@ -44,22 +52,26 @@ class NodePacketHandlerAggregate {
     return false;
   }
 
-  addModule(mod: Module) {
-    if (!mod.Node) { return; }
-    logger.debug('Node:Registering handler', mod.Node['name']);
-    this.factories.push(mod);
-  }
 }
 
 class PoolPacketHandlerAggregate {
 
-  factories: Module[];
+  static factories: Module[] = [];
   modules: PoolPacketHandler[];
   parent: Pool;
 
   constructor() {
-    this.factories = [];
     this.modules = [];
+  }
+
+  static create(parent: Pool, parentPoolCtx) {
+    return (new this).create(parent, parentPoolCtx);
+  }
+
+  static addModule(mod: Module) {
+    if (!mod.Pool) { return; }
+    logger.debug('Pool:Registering handler', mod.Pool['name']);
+    this.factories.push(mod);
   }
 
   create(parent: Pool, parentPoolCtx) {
@@ -70,7 +82,7 @@ class PoolPacketHandlerAggregate {
     const ictxMap: Map<Module, IsolatedContext> = new Map;
     parentPoolCtx[ictxSymbol] = ictxMap;
 
-    this.modules = this.factories.map((f) => {
+    this.modules = PoolPacketHandlerAggregate.factories.map((f) => {
       const ictx = {};
 
       // Linking module instance to its isolated context
@@ -102,29 +114,33 @@ class PoolPacketHandlerAggregate {
     }
   }
 
-  addModule(mod: Module) {
-    if (!mod.Pool) { return; }
-    logger.debug('Pool:Registering handler', mod.Pool['name']);
-    this.factories.push(mod);
-  }
 }
 
 class PeerPacketHandlerAggregate {
 
-  factories: Module[];
+  static factories: Module[] = [];
   modules: PeerPacketHandler[];
   parent: Peer;
 
   constructor() {
-    this.factories = [];
     this.modules = [];
   }
 
+  static create(parent: Peer, parentPoolCtx) {
+    return (new this).create(parent, parentPoolCtx);
+  }
+
+  static addModule(mod: Module) {
+    if (!mod.Peer) { return; }
+    logger.debug('Peer:Registering handler', mod.Peer['name']);
+    this.factories.push(mod);
+  }
+
   create(parent: Peer, parentPoolCtx) {
-    // logger.debug('Peer:create', parentPoolCtx);
+    logger.debug('Peer:create');
     this.parent = parent;
 
-    this.modules = this.factories.map((f) => {
+    this.modules = PeerPacketHandlerAggregate.factories.map((f) => {
       const ictx = parentPoolCtx[ictxSymbol].get(f);
       return f.Peer.create(parent, ictx);
     });
@@ -132,8 +148,7 @@ class PeerPacketHandlerAggregate {
     return this;
   }
 
-  handlePacket(packet): boolean {
-    // logger.debug('Peer:handle packet');
+  handlePacket(packet: AbstractPacket): boolean {
     let handled = false;
     for (const mod of this.modules) {
       handled = mod.handlePacket(packet);
@@ -143,19 +158,13 @@ class PeerPacketHandlerAggregate {
     }
     return false;
   }
-
-  addModule(mod: Module) {
-    if (!mod.Peer) { return; }
-    logger.debug('Peer:Registering handler', mod.Peer['name']);
-    this.factories.push(mod);
-  }
 }
 
 export class CompoundModule implements ModuleI {
 
-  Node: NodePacketHandlerAggregate;
-  Pool: PoolPacketHandlerAggregate;
-  Peer: PeerPacketHandlerAggregate;
+  Node: typeof NodePacketHandlerAggregate;
+  Pool: typeof PoolPacketHandlerAggregate;
+  Peer: typeof PeerPacketHandlerAggregate;
   packets: Array<(typeof AbstractPacket)>;
 
   static create(modules?: Module[]) {
@@ -163,9 +172,9 @@ export class CompoundModule implements ModuleI {
   }
 
   private create(modules?: Module[]) {
-    this.Node = new NodePacketHandlerAggregate;
-    this.Pool = new PoolPacketHandlerAggregate;
-    this.Peer = new PeerPacketHandlerAggregate;
+    this.Node = NodePacketHandlerAggregate;
+    this.Pool = PoolPacketHandlerAggregate;
+    this.Peer = PeerPacketHandlerAggregate;
     this.packets = [];
 
     if (modules) {
