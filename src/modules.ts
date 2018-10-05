@@ -11,6 +11,11 @@ import { SimpleLogger } from './logger';
 const logger = new SimpleLogger('mods');
 const contexts: Map<Module, symbol> = new Map;
 
+const ictxSymbol = Symbol('Isolated context');
+
+// tslint:disable-next-line:no-empty-interface
+declare interface IsolatedContext extends Object { }
+
 class NodePacketHandlerAggregate {
 
   factories: Module[];
@@ -53,18 +58,25 @@ class PoolPacketHandlerAggregate {
   parent: Pool;
 
   constructor() {
-    // this.contexts = new WeakMap;
     this.factories = [];
     this.modules = [];
   }
 
   create(parent: Pool, parentPoolCtx) {
-    logger.debug('Pool:create', parentPoolCtx);
+    // logger.debug('Pool:create', parentPoolCtx);
     this.parent = parent;
+
+    // Create isolated context map in pool context
+    const ictxMap: Map<Module, IsolatedContext> = new Map;
+    parentPoolCtx[ictxSymbol] = ictxMap;
+
     this.modules = this.factories.map((f) => {
-      const moduleSymbol = contexts.get(f);
-      const ctx = parentPoolCtx[moduleSymbol] = {};
-      return f.Pool.create(parent, ctx);
+      const ictx = {};
+
+      // Linking module instance to its isolated context
+      parentPoolCtx[ictxSymbol].set(f, ictx);
+
+      return f.Pool.create(parent, ictx);
     });
 
     return this;
@@ -109,22 +121,19 @@ class PeerPacketHandlerAggregate {
   }
 
   create(parent: Peer, parentPoolCtx) {
-    logger.debug('Peer:create', parentPoolCtx);
+    // logger.debug('Peer:create', parentPoolCtx);
     this.parent = parent;
-    // this.modules = modules.map((m) => m.Peer.create(parent, isolatedCtx));
 
     this.modules = this.factories.map((f) => {
-      const moduleSymbol = contexts.get(f);
-      const ctx = parentPoolCtx[moduleSymbol];
-      const mod = f.Peer.create(parent, ctx);
-      return mod;
+      const ictx = parentPoolCtx[ictxSymbol].get(f);
+      return f.Peer.create(parent, ictx);
     });
 
     return this;
   }
 
   handlePacket(packet): boolean {
-    logger.debug('Peer:handle packet');
+    // logger.debug('Peer:handle packet');
     let handled = false;
     for (const mod of this.modules) {
       handled = mod.handlePacket(packet);
@@ -169,8 +178,6 @@ export class CompoundModule implements ModuleI {
   }
 
   addModule(mod: Module) {
-    logger.debug('Main:Registering module', mod);
-
     contexts.set(mod, Symbol());
     this.Node.addModule(mod);
     this.Pool.addModule(mod);
