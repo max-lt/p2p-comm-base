@@ -1,6 +1,6 @@
 import {
   PoolPacketHandler, PeerPacketHandler,
-  Module, ModuleI, NodePacketHandler
+  Module, ModuleI, NodePacketHandler, PeerPacketHandlerFactory, PoolPacketHandlerFactory, NodePacketHandlerFactory
 } from './module';
 
 import { AbstractPacket } from './packets/abstract';
@@ -16,155 +16,114 @@ const ictxSymbol = Symbol('Isolated context');
 // tslint:disable-next-line:no-empty-interface
 declare interface IsolatedContext extends Object { }
 
-class NodePacketHandlerAggregate {
+export interface ModuleStore {
+  addModule(mod: Module): void;
+}
 
-  static factories: Module[] = [];
-  modules: NodePacketHandler[];
-  parent: Node;
-
-  constructor() {
-    this.modules = [];
-  }
-
-  static create(parent: Node) {
-    return (new this).create(parent);
-  }
-
-  static addModule(mod: Module) {
-    if (!mod.Node) { return; }
-    logger.debug('Node:Registering handler', mod.Node['name']);
-    this.factories.push(mod);
-  }
-
-  create(parent: Node) {
-    return this;
-  }
-
-  handlePacket(packet): boolean {
-    logger.debug('Node:handle packet');
+function handlePacketFactory(modules: (NodePacketHandler | PeerPacketHandler)[]) {
+  return function (packet: AbstractPacket) {
     let handled = false;
-    for (const mod of this.modules) {
+    for (const mod of modules) {
       handled = mod.handlePacket(packet);
       if (handled) {
         return true;
       }
     }
     return false;
-  }
-
+  };
 }
 
-class PoolPacketHandlerAggregate {
-
-  static factories: Module[] = [];
-  modules: PoolPacketHandler[];
-  parent: Pool;
-
-  constructor() {
-    this.modules = [];
-  }
-
-  static create(parent: Pool, parentPoolCtx) {
-    return (new this).create(parent, parentPoolCtx);
-  }
-
-  static addModule(mod: Module) {
-    if (!mod.Pool) { return; }
-    logger.debug('Pool:Registering handler', mod.Pool['name']);
-    this.factories.push(mod);
-  }
-
-  create(parent: Pool, parentPoolCtx) {
-    // logger.debug('Pool:create', parentPoolCtx);
-    this.parent = parent;
-
-    // Create isolated context map in pool context
-    const ictxMap: Map<Module, IsolatedContext> = new Map;
-    parentPoolCtx[ictxSymbol] = ictxMap;
-
-    this.modules = PoolPacketHandlerAggregate.factories.map((f) => {
-      const ictx = {};
-
-      // Linking module instance to its isolated context
-      parentPoolCtx[ictxSymbol].set(f, ictx);
-
-      return f.Pool.create(parent, ictx);
-    });
-
-    return this;
-  }
-
-  beforeBroadcast(packet: AbstractPacket) {
-    let handled = false;
-    for (const mod of this.modules) {
-      if (!mod.beforeBroadcast) {
-        continue;
-      }
-      handled = mod.beforeBroadcast(packet);
-      if (handled) {
-        return true;
-      }
+function nodePacketHandlerAggregateFactory(): NodePacketHandlerFactory & ModuleStore {
+  const factories: Module[] = [];
+  return {
+    create(parent: Node): NodePacketHandler {
+      const modules: PeerPacketHandler[] = factories.map((f) => f.Node.create(parent));
+      return {
+        handlePacket: handlePacketFactory(modules)
+      };
+    },
+    addModule(mod: Module) {
+      if (!mod.Node) { return; }
+      logger.debug('Node:Registering handler', mod.Peer['name']);
+      factories.push(mod);
     }
-    return false;
-  }
-
-  bindPeer(peer: Peer) {
-    for (const mod of this.modules) {
-      mod.bindPeer(peer);
-    }
-  }
-
+  };
 }
 
-class PeerPacketHandlerAggregate {
+function poolPacketHandlerAggregateFactory(): PoolPacketHandlerFactory & ModuleStore {
+  const factories: Module[] = [];
+  return {
+    create(pool: Pool, parentPoolCtx: object): PoolPacketHandler {
+      const parent = pool;
 
-  static factories: Module[] = [];
-  modules: PeerPacketHandler[];
-  parent: Peer;
+      // Create isolated context map in pool context
+      const ictxMap: Map<Module, IsolatedContext> = new Map;
+      parentPoolCtx[ictxSymbol] = ictxMap;
 
-  constructor() {
-    this.modules = [];
-  }
+      const modules: PoolPacketHandler[] = factories.map((f) => {
+        const ictx = {};
 
-  static create(parent: Peer, parentPoolCtx) {
-    return (new this).create(parent, parentPoolCtx);
-  }
+        // Linking module instance to its isolated context
+        parentPoolCtx[ictxSymbol].set(f, ictx);
 
-  static addModule(mod: Module) {
-    if (!mod.Peer) { return; }
-    logger.debug('Peer:Registering handler', mod.Peer['name']);
-    this.factories.push(mod);
-  }
+        return f.Pool.create(parent, ictx);
+      });
 
-  create(parent: Peer, parentPoolCtx) {
-    logger.debug('Peer:create');
-    this.parent = parent;
-
-    this.modules = PeerPacketHandlerAggregate.factories.map((f) => {
-      const ictx = parentPoolCtx[ictxSymbol].get(f);
-      return f.Peer.create(parent, ictx);
-    });
-
-    return this;
-  }
-
-  handlePacket(packet: AbstractPacket): boolean {
-    let handled = false;
-    for (const mod of this.modules) {
-      handled = mod.handlePacket(packet);
-      if (handled) {
-        return true;
-      }
+      return {
+        bindPeer(peer: Peer) {
+          for (const mod of modules) {
+            mod.bindPeer(peer);
+          }
+        },
+        beforeBroadcast(packet: AbstractPacket) {
+          let handled = false;
+          for (const mod of modules) {
+            if (!mod.beforeBroadcast) {
+              continue;
+            }
+            handled = mod.beforeBroadcast(packet);
+            if (handled) {
+              return true;
+            }
+          }
+          return false;
+        }
+      };
+    },
+    addModule(mod: Module) {
+      if (!mod.Pool) { return; }
+      logger.debug('Pool:Registering handler', mod.Pool['name']);
+      factories.push(mod);
     }
-    return false;
-  }
+  };
+}
+
+function peerPacketHandlerAggregateFactory(): PeerPacketHandlerFactory & ModuleStore {
+  const factories: Module[] = [];
+  return {
+    create(peer: Peer, parentPoolCtx: object): PeerPacketHandler {
+      const parent = peer;
+      const modules: PeerPacketHandler[] = factories.map((f) => {
+        const ictx = parentPoolCtx[ictxSymbol].get(f);
+        return f.Peer.create(parent, ictx);
+      });
+      return {
+        handlePacket: handlePacketFactory(modules)
+      };
+    },
+    addModule(mod: Module) {
+      if (!mod.Peer) { return; }
+      logger.debug('Peer:Registering handler', mod.Peer['name']);
+      factories.push(mod);
+    }
+  };
 }
 
 export class CompoundModule implements ModuleI {
 
-  Node: typeof NodePacketHandlerAggregate;
-  Pool: typeof PoolPacketHandlerAggregate;
-  Peer: typeof PeerPacketHandlerAggregate;
+  Node: NodePacketHandlerFactory & ModuleStore;
+  Pool: PoolPacketHandlerFactory & ModuleStore;
+  Peer: PeerPacketHandlerFactory & ModuleStore;
   packets: Array<(typeof AbstractPacket)>;
 
   static create(modules?: Module[]) {
@@ -172,9 +131,9 @@ export class CompoundModule implements ModuleI {
   }
 
   private create(modules?: Module[]) {
-    this.Node = NodePacketHandlerAggregate;
-    this.Pool = PoolPacketHandlerAggregate;
-    this.Peer = PeerPacketHandlerAggregate;
+    this.Node = nodePacketHandlerAggregateFactory();
+    this.Pool = poolPacketHandlerAggregateFactory();
+    this.Peer = peerPacketHandlerAggregateFactory();
     this.packets = [];
 
     if (modules) {
