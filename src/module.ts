@@ -43,20 +43,17 @@ interface ModuleOptionsI {
   packets?: Array<(typeof AbstractPacket)>;
 }
 
-export class Module implements ModuleI {
-
+export class ModuleBuilder implements ModuleI {
   Node: NodePacketHandlerFactory;
   Pool: PoolPacketHandlerFactory;
   Peer: PeerPacketHandlerFactory;
   packets: Array<(typeof AbstractPacket)>;
 
-  private constructor() { }
-
-  static create(opts: ModuleOptionsI) {
-    return (new this).create(opts);
+  protected constructor(opts: ModuleOptionsI) {
+    this.create(opts);
   }
 
-  private create(opts: ModuleOptionsI): this {
+  protected create(opts: ModuleOptionsI): this {
     this.Node = opts.Node;
     this.Pool = opts.Pool;
     this.Peer = opts.Peer;
@@ -64,3 +61,5 @@ export class Module implements ModuleI {
     return this;
   }
 }
+
+export class Module extends ModuleBuilder { }

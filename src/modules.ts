@@ -126,11 +126,11 @@ export class CompoundModule implements ModuleI {
   Peer: PeerPacketHandlerFactory & ModuleStore;
   packets: Array<(typeof AbstractPacket)>;
 
-  static create(modules?: Module[]) {
-    return (new this).create(modules);
+  constructor(modules?: Module[]) {
+    this.create(modules);
   }
 
-  private create(modules?: Module[]) {
+  protected create(modules?: Module[]) {
     this.Node = nodePacketHandlerAggregateFactory();
     this.Pool = poolPacketHandlerAggregateFactory();
     this.Peer = peerPacketHandlerAggregateFactory();
