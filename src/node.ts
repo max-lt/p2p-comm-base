@@ -9,7 +9,6 @@ import { Peer } from './peer';
 import { AbstractPacket } from './packets/abstract';
 
 export interface Node {
-
   id: string;
   listen(port?: number);
 
@@ -24,9 +23,7 @@ export interface Node {
   once(event: 'error', listener: (err: Error) => void): this;
   once(event: 'connection', listener: (transport: AbstractTransport) => void): this;
   once(event: 'listening', listener: (data: any) => void): this;
-
 }
-
 
 export abstract class BaseNode<T extends AbstractTransport> extends EventEmitter implements Node {
 

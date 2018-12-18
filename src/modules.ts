@@ -53,20 +53,20 @@ function nodePacketHandlerAggregateFactory(): NodePacketHandlerFactory & ModuleS
 function poolPacketHandlerAggregateFactory(): PoolPacketHandlerFactory & ModuleStore {
   const factories: Module[] = [];
   return {
-    create(pool: Pool, parentPoolCtx: object): PoolPacketHandler {
+    create(pool: Pool, poolCtx: object): PoolPacketHandler {
       const parent = pool;
 
       // Create isolated context map in pool context
       const ictxMap: Map<Module, IsolatedContext> = new Map;
-      parentPoolCtx[ictxSymbol] = ictxMap;
+      poolCtx[ictxSymbol] = ictxMap;
 
-      const modules: PoolPacketHandler[] = factories.map((f) => {
+      const modules: PoolPacketHandler[] = factories.map((handler) => {
         const ictx = {};
 
         // Linking module instance to its isolated context
-        parentPoolCtx[ictxSymbol].set(f, ictx);
+        poolCtx[ictxSymbol].set(handler, ictx);
 
-        return f.Pool.create(parent, ictx);
+        return handler.Pool.create(parent, ictx);
       });
 
       return {

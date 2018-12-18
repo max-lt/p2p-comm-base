@@ -13,7 +13,7 @@
   "include": [
     "index.ts",
     "src/**/*.ts",
-    "test/**/*.ts", "../p2p-comm-core/src/modules/handshake.ts", "../p2p-comm-core/src/modules/handshake.ts", "../p2p-comm-core/src/modules/module.ts", "../p2p-comm-core/src/node.ts", "../p2p-comm-core/src/peer.ts", "../p2p-comm-core/src/module.ts", "../p2p-comm-core/src/parser.ts", "../p2p-comm-core/src/logger.ts", "../p2p-comm-core/src/index.ts", "../p2p-comm-core/src/pool.ts"
+    "test/**/*.ts"
   ],
   "exclude": [
     "node_modules"

@@ -23,3 +23,5 @@ export { BufferParser } from './parser';
 export { AbstractTransport, AbstractServer } from './transport';
 
 export { CompoundModule } from './modules';
+
+export { Timer as TimerUtil } from './util/timer';
