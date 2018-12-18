@@ -14,12 +14,16 @@
     "test": "npx mocha test/**/*.js --timeout 60000 --exit",
     "test:debug": "DEBUG=p2p-comm* npm test",
     "test:ts": "npx mocha -r ts-node/register test/**/*.ts --timeout 60000 --exit",
-    "test:ts:debug": "DEBUG=p2p-comm* npm test:ts",
-    "clean": "git clean -fX",
-    "prepack": "npm run build"
+    "test:ts:debug": "DEBUG=p2p-comm* npm run test:ts",
+    "clean": "git clean -fX"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "maxx-t",
+  "homepage": "https://github.com/maxx-t/p2p-comm-base",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/maxx-t/p2p-comm-base.git"
+  },
+  "license": "MIT",
   "dependencies": {
     "debug": "^4.0.1",
     "uuid": "^3.3.2"
