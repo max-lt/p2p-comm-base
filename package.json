@@ -10,7 +10,6 @@
     "check": "npx tsc --noEmit",
     "build": "npx tsc",
     "dev": "DEBUG=p2p-comm* npx ts-node-dev src/dev.ts",
-    "start": "node dist/dev",
     "pretest": "npm run build",
     "test": "npx mocha test/**/*.js --timeout 60000 --exit",
     "test:debug": "DEBUG=p2p-comm* npm test",
